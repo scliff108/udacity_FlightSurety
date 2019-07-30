@@ -20,41 +20,48 @@ contract FlightSuretyApp {
     uint8 private constant STATUS_CODE_LATE_TECHNICAL = 40;
     uint8 private constant STATUS_CODE_LATE_OTHER = 50;
 
+    // Insurace Constants
+    uint256 AIRLINE_REGISTRATION_FEE = 10 ether;
+    uint256 MAX_INSURANCE_PLAN = 1 ether;
+    uint256 INSURANCE_PAYOUT = 150; // Must divide by 100 to get percentage payout
+    uint256 INSURANCE_PAYOUT_PERCENTAGE = INSURANCE_PAYOUT.div(100);
+
+    // Airline Registration Helpers
+    uint256 AIRLINE_VOTING_THRESHOLD = 4;
+    uint256 AIRLINE_REGISTRATION_REQUIRED_VOTES = 2;
+
     // Account used to deploy contract
     address private contractOwner;
 
+    // Contract Operational
+    bool private operational = true;
+
+    // Airlines
+    struct PendingAirline {
+        bool isRegistered;
+        bool isFunded;
+    }
+
+    mapping(address => address[]) public pendingAirlines;
+
+    // Flights
     struct Flight {
         bool isRegistered;
         uint8 statusCode;
-        uint256 updatedTimestamp;
+        uint256 timeStamp;
         address airline;
+        InsuranceClaim[] claimsOnFlight;
     }
 
     mapping(bytes32 => Flight) private flights;
 
-
-    /********************************************************************************************/
-    /*                                       FUNCTION MODIFIERS                                 */
-    /********************************************************************************************/
-
-    /**
-    * @dev Modifier that requires the "operational" boolean variable to be "true"
-    *      This is used on all state changing functions to pause the contract in
-    *      the event there is an issue that needs to be fixed
-    */
-    modifier requireIsOperational() {
-         // Modify to call data contract's status
-        require(true, "Contract is currently not operational");
-        _;
+    struct InsuranceClaim {
+        bool payoutEarned;
+        bool paid;
+        uint256 payout;
     }
 
-    /**
-    * @dev Modifier that requires the "ContractOwner" account to be the function caller
-    */
-    modifier requireContractOwner() {
-        require(msg.sender == contractOwner, "Caller is not contract owner");
-        _;
-    }
+    FlightSuretyData flightSuretyData;
 
     /********************************************************************************************/
     /*                                       CONSTRUCTOR                                        */
@@ -69,12 +76,60 @@ contract FlightSuretyApp {
     }
 
     /********************************************************************************************/
+    /*                                       FUNCTION MODIFIERS                                 */
+    /********************************************************************************************/
+
+    /**
+    * @dev Modifier that requires the "operational" boolean variable to be "true"
+    *      This is used on all state changing functions to pause the contract in
+    *      the event there is an issue that needs to be fixed
+    */
+    modifier requireIsOperational() {
+        require(operational, "Contract is currently not operational");
+        _;
+    }
+
+    /**
+    * @dev Modifier that requires the "ContractOwner" account to be the function caller
+    */
+    modifier requireContractOwner() {
+        require(msg.sender == contractOwner, "Caller is not contract owner");
+        _;
+    }
+
+        /**
+    * @dev Modifier that requires an Airline is not registered yet
+    */
+    modifier requireAirlineIsNotRegistered(address airline) {
+        require(!flightSuretyData.isAirlineRegistered(airline), "Airline is not registered.");
+        _;
+    }
+
+    /**
+    * @dev Modifier that requires an Airline to be registered
+    */
+    modifier requireIsAirlineRegistered(address airline) {
+        require(flightSuretyData.isAirlineRegistered(airline), "Airline is not registered.");
+        _;
+    }
+
+    /**
+    * @dev Modifier that requires an Airline to be funded
+    */
+    modifier requireIsAirlineFunded(address airline) {
+        require(flightSuretyData.isAirlineFunded(airline), "Airline is not funded.");
+        _;
+    }
+
+    /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
 
-    function isOperational() public pure returns(bool) {
-        // Modify to call data contract's status
-        return true;
+    /**
+     * @dev Check if the contract is operational
+     */
+    function isOperational() public view returns(bool) {
+        return operational;
     }
 
     /********************************************************************************************/
@@ -84,11 +139,38 @@ contract FlightSuretyApp {
    /**
     * @dev Add an airline to the registration queue
     *
+    * @return Success/Failure, Votes cast for airline, current member count
     */
-    function registerAirline() external pure returns(bool success, uint256 votes) {
-        return (success, 0);
+    function registerAirline(address airline)
+        external
+        requireIsOperational
+        requireAirlineIsNotRegistered(airline) // Airline is not registered yet
+        requireIsAirlineFunded(msg.sender) // Voter is a funded airline
+        returns(bool success, uint256 votes, uint256 registeredAirlineCount)
+    {
+        // If less than required minimum airlines for voting process
+        if (flightSuretyData.getRegisteredAirlineCount() <= AIRLINE_VOTING_THRESHOLD) {
+            flightSuretyData.registerAirline(airline, msg.sender);
+            return(success, 0, flightSuretyData.getRegisteredAirlineCount());
+        } else {
+            // Check for duplicates
+            bool isDuplicate = false;
+            for (uint256 i = 0; i < pendingAirlines[airline].length; i++) {
+                if (pendingAirlines[airline][i] == msg.sender) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            require(!isDuplicate, "Duplicate vote, you cannot vote for the same airline twice.");
+            pendingAirlines[airline].push(msg.sender);
+            // Check if enough votes to register airline
+            if (pendingAirlines[airline].length >= flightSuretyData.getRegisteredAirlineCount().div(AIRLINE_REGISTRATION_REQUIRED_VOTES)) {
+                flightSuretyData.registerAirline(airline, msg.sender);
+                return(true, pendingAirlines[airline].length, flightSuretyData.getRegisteredAirlineCount());
+            }
+            return(false, pendingAirlines[airline].length, flightSuretyData.getRegisteredAirlineCount());
+        }
     }
-
 
    /**
     * @dev Register a future flight for insuring.
@@ -248,4 +330,28 @@ contract FlightSuretyApp {
         return random;
     }
 
+}
+
+contract FlightSuretyData {
+    function isOperational() public view returns(bool);
+    function isAirlineRegistered(address airline) public view returns(bool);
+    function isAirlineFunded(address airline) public view returns(bool);
+    function registerAirline(address newAirline, address registeringAirline) external;
+    function fundAirline(address airline) external payable;
+    function getRegisteredAirlineCount() external returns(uint256);
+    function registerFlight(
+        bytes32 flightKey,
+        address registeringAirline,
+        string calldata flight,
+        uint256 timestamp,
+        string calldata departTime,
+        string calldata destination
+    ) external;
+    function buyInsurance(
+        bytes32 flightKey,
+        address passenger,
+        uint256 amount,
+        uint256 payout
+    ) external payable;
+    function pay(address payoutAddress) external;
 }

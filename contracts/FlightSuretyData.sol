@@ -12,18 +12,56 @@ contract FlightSuretyData {
     address private contractOwner; // Account used to deploy contract
     bool private operational = true; // Blocks all state changes throughout the contract if false
 
-    /********************************************************************************************/
-    /*                                       EVENT DEFINITIONS                                  */
-    /********************************************************************************************/
+    // Airlines
+    struct Airline {
+        bool isRegistered;
+        bool isFunded;
+        uint256 funds;
+    }
+    uint256 registeredAirlineCount = 0;
+    uint256 fundedAirlineCount = 0;
+    mapping(address => Airline) public airlines;
 
+    // Flights
+    struct Flight {
+        bool isRegistered;
+        address airline;
+        uint8 statusCode;
+        uint256 timeOfCreation;
+        uint256 timeOfDeparture;
+    }
+    mapping(bytes32 => Flight) private flights;
+
+    // Insurance Claims
+    struct InsuranceClaim {
+        address passenger;
+        bytes32 flight;
+        uint256 payoutAmount;
+        uint256 payoutPercentage;
+        bool credited;
+    }
+
+    // Flight Insurance Claims
+    mapping(bytes32 => InsuranceClaim[]) private flightInsuranceClaims;
+
+    // Passenger Insurance Claims
+    mapping(address => InsuranceClaim[]) private passengerInsuranceClaims;
 
     /**
     * @dev Constructor
     *      The deploying account becomes contractOwner
     */
-    constructor() public {
+    constructor(address airlineAddress) public {
         contractOwner = msg.sender;
+        airlines[airlineAddress] = Airline(true, false, 0);
     }
+    /********************************************************************************************/
+    /*                                       EVENT DEFINITIONS                                  */
+    /********************************************************************************************/
+
+    // Delinquent Airline (Cannot pay insurance claim)
+    event airlineRegistered(address airline);
+    event airlineFunded(address airline);
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -53,7 +91,6 @@ contract FlightSuretyData {
 
     /**
     * @dev Get operating status of contract
-    *
     * @return A bool that is the current operating status
     */
     function isOperational() public view returns(bool) {
@@ -62,7 +99,6 @@ contract FlightSuretyData {
 
     /**
     * @dev Sets contract operations on/off
-    *
     * When operational mode is disabled, all write transactions except for this one will fail
     */
     function setOperatingStatus(bool mode) external requireContractOwner {
@@ -73,26 +109,67 @@ contract FlightSuretyData {
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
 
-   /**
-    * @dev Add an airline to the registration queue
-    *      Can only be called from FlightSuretyApp contract
-    *
+    /**
+    * @dev Check if airline is registered
+    * @return Airline Registered (true/false)
     */
-    function registerAirline() external pure {
-        // TODO
+    function isAirlineRegistered(address airline) public view returns(bool) {
+        return airlines[airline].isRegistered;
     }
 
+    /**
+    * @dev Check if airline is funded
+    * @return Airline Funded (true/false)
+    */
+    function isAirlineFunded(address airline) public view returns(bool) {
+        return airlines[airline].isFunded;
+    }
+
+    /**
+    * @dev Add an airline to the registration queue
+    *      Can only be called from FlightSuretyApp contract
+    */
+    function registerAirline(
+        address newAirline,
+        address registeringAirline
+    )
+        external
+        requireIsOperational
+    {
+        // Voting handled in FlightSuretyApp
+        airlines[newAirline] = Airline(true, false, 0);
+        registeredAirlineCount.add(1);
+        emit airlineRegistered(newAirline);
+    }
+
+    /**
+    * @dev Initial funding for the insurance. Unless there are too many delayed flights
+    *      resulting in insurance payouts, the contract should be self-sustaining
+    */
+    function fundAirline(address airline) private requireIsOperational {
+        // Money handled in FlightSuretyApp
+        airlines[airline].isFunded = true;
+        fundedAirlineCount.add(1);
+        emit airlineFunded(airline);
+    }
+
+    /**
+     * @dev Get the number of airlines already registered
+     * @return Number of registered airlines
+     */
+    function getRegisteredAirlineCount() external returns(uint256) {
+        return registeredAirlineCount;
+    }
 
    /**
     * @dev Buy insurance for a flight
-    *
     */
-    function buy() external payable {
+    function buyInsurance(bytes32 flightKey, address passenger, uint256 amount, uint256 payout) external payable {
         // TODO
     }
 
     /**
-     *  @dev Credits payouts to insurees
+    *  @dev Credits payouts to insurees
     */
     function creditInsurees() external pure{
         // TODO
@@ -100,23 +177,17 @@ contract FlightSuretyData {
 
     /**
      *  @dev Transfers eligible payout funds to insuree
-     *
     */
-    function pay() external pure {
-        // TODO
-    }
-
-   /**
-    * @dev Initial funding for the insurance. Unless there are too many delayed flights
-    *      resulting in insurance payouts, the contract should be self-sustaining
-    *
-    */   
-    function fund() public payable {
+    function pay(address payoutAddress) external {
         // TODO
     }
 
     function getFlightKey(address airline, string memory flight, uint256 timestamp) internal pure returns(bytes32) {
         return keccak256(abi.encodePacked(airline, flight, timestamp));
+    }
+
+    function fund() public payable {
+
     }
 
     /**
