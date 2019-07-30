@@ -97,11 +97,19 @@ contract FlightSuretyApp {
         _;
     }
 
-        /**
+    /**
     * @dev Modifier that requires an Airline is not registered yet
     */
     modifier requireAirlineIsNotRegistered(address airline) {
-        require(!flightSuretyData.isAirlineRegistered(airline), "Airline is not registered.");
+        require(!flightSuretyData.isAirlineRegistered(airline), "Airline is already registered.");
+        _;
+    }
+
+    /**
+    * @dev Modifier that requires an Airline is not funded yet
+    */
+    modifier requireAirlineIsNotFunded(address airline) {
+        require(!flightSuretyData.isAirlineFunded(airline), "Airline is already funded.");
         _;
     }
 
@@ -119,6 +127,23 @@ contract FlightSuretyApp {
     modifier requireIsAirlineFunded(address airline) {
         require(flightSuretyData.isAirlineFunded(airline), "Airline is not funded.");
         _;
+    }
+
+    /**
+     * @dev Modifier that requires sufficient funding to fund an airline
+     */
+    modifier requireSufficientFunding() {
+        require(msg.value >= AIRLINE_REGISTRATION_FEE, "Insufficient Funds.");
+        _;
+    }
+
+    /**
+     * @dev Modifier that returns change after airline is funded
+     */
+    modifier calculateRefund() {
+        _;
+        uint refund = msg.value - AIRLINE_REGISTRATION_FEE;
+        msg.sender.transfer(refund);
     }
 
     /********************************************************************************************/
@@ -170,6 +195,22 @@ contract FlightSuretyApp {
             }
             return(false, pendingAirlines[airline].length, flightSuretyData.getRegisteredAirlineCount());
         }
+    }
+
+    /**
+     * @dev Fund a registered airline
+     */
+    function fundAirline()
+        external
+        payable
+        requireIsOperational
+        requireIsAirlineRegistered(msg.sender)
+        requireAirlineIsNotFunded(msg.sender)
+        requireSufficientFunding
+        calculateRefund
+    {
+        address(uint160(address(flightSuretyData))).transfer(AIRLINE_REGISTRATION_FEE);
+        flightSuretyData.fundAirline(msg.sender);
     }
 
    /**
