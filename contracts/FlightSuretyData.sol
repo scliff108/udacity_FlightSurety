@@ -146,7 +146,7 @@ contract FlightSuretyData {
     * @dev Initial funding for the insurance. Unless there are too many delayed flights
     *      resulting in insurance payouts, the contract should be self-sustaining
     */
-    function fundAirline(address airline) private requireIsOperational {
+    function fundAirline(address airline) external requireIsOperational {
         // Money handled in FlightSuretyApp
         airlines[airline].isFunded = true;
         fundedAirlineCount.add(1);

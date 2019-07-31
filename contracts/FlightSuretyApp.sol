@@ -1,6 +1,7 @@
 pragma solidity ^0.5.8;
 
 import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./FlightSuretyData.sol";
 
 /************************************************** */
 /* FlightSurety Smart Contract                      */
@@ -71,8 +72,9 @@ contract FlightSuretyApp {
     * @dev Contract constructor
     *
     */
-    constructor() public {
+    constructor(address payable fSData) public {
         contractOwner = msg.sender;
+        flightSuretyData = FlightSuretyData(fSData);
     }
 
     /********************************************************************************************/
@@ -373,6 +375,7 @@ contract FlightSuretyApp {
 
 }
 
+/*
 contract FlightSuretyData {
     function isOperational() public view returns(bool);
     function isAirlineRegistered(address airline) public view returns(bool);
@@ -396,3 +399,4 @@ contract FlightSuretyData {
     ) external payable;
     function pay(address payoutAddress) external;
 }
+*/
