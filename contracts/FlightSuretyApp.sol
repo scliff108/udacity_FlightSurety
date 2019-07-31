@@ -221,15 +221,18 @@ contract FlightSuretyApp {
         requireIsOperational
         requireIsAirlineFunded(msg.sender)
         requireFlightIsNotRegistered(getFlightKey(msg.sender, flightName, departure))
+        returns(bytes32)
     {
         // TODO
+        bytes32 flightKey = getFlightKey(msg.sender, flightName, departure);
         flightSuretyData.registerFlight(
-            getFlightKey(msg.sender, flightName, departure),
+            flightKey,
             msg.sender,
             flightName,
             destination,
             departure
         );
+        return flightKey;
     }
 
    /**

@@ -214,7 +214,7 @@ contract FlightSuretyData {
      * @dev Get the number of airlines already registered
      * @return Number of registered airlines
      */
-    function getRegisteredAirlineCount() external requireIsOperational returns(uint256) {
+    function getRegisteredAirlineCount() public view requireIsOperational returns(uint256) {
         return registeredAirlineCount;
     }
 
