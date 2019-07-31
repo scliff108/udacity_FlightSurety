@@ -45,23 +45,6 @@ contract FlightSuretyApp {
 
     mapping(address => address[]) public pendingAirlines;
 
-    // Flights
-    struct Flight {
-        bool isRegistered;
-        uint8 statusCode;
-        uint256 timeStamp;
-        address airline;
-        InsuranceClaim[] claimsOnFlight;
-    }
-
-    mapping(bytes32 => Flight) private flights;
-
-    struct InsuranceClaim {
-        bool payoutEarned;
-        bool paid;
-        uint256 payout;
-    }
-
     FlightSuretyData flightSuretyData;
 
     /********************************************************************************************/
@@ -114,6 +97,15 @@ contract FlightSuretyApp {
         require(!flightSuretyData.isAirlineFunded(airline), "Airline is already funded.");
         _;
     }
+
+    /**
+    * @dev Modifier that requires an Flight is not registered yet
+    */
+    modifier requireFlightIsNotRegistered(bytes32 flightKey) {
+        require(!flightSuretyData.isFlightRegistered(flightKey), "Flight is already registered.");
+        _;
+    }
+
 
     /**
     * @dev Modifier that requires an Airline to be registered
@@ -212,15 +204,32 @@ contract FlightSuretyApp {
         calculateRefund
     {
         address(uint160(address(flightSuretyData))).transfer(AIRLINE_REGISTRATION_FEE);
-        flightSuretyData.fundAirline(msg.sender);
+        flightSuretyData.fundAirline(msg.sender, AIRLINE_REGISTRATION_FEE);
     }
 
    /**
     * @dev Register a future flight for insuring.
     *
     */
-    function registerFlight() external pure {
+    function registerFlight
+    (
+        string calldata flightName,
+        uint256 departure,
+        string calldata destination
+    )
+        external
+        requireIsOperational
+        requireIsAirlineFunded(msg.sender)
+        requireFlightIsNotRegistered(getFlightKey(msg.sender, flightName, departure))
+    {
         // TODO
+        flightSuretyData.registerFlight(
+            getFlightKey(msg.sender, flightName, departure),
+            msg.sender,
+            flightName,
+            destination,
+            departure
+        );
     }
 
    /**
