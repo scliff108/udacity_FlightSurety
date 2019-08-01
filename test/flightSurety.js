@@ -109,6 +109,43 @@ contract('Flight Surety Tests', async (accounts) => {
     assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
   });
 
+  it('(airline) can fund itself using fundAirline()', async () => {
+    
+    // ARRANGE
+    let amount = web3.utils.toWei('10', 'ether');
+    let result = false;
+
+    // ACT
+    try {
+        result = await config.flightSuretyApp.fundAirline.call({from: config.firstAirline, value: amount});
+    }
+    catch(e) {
+        console.log(e);
+    }
+    
+    // ASSERT
+    assert.equal(result, true, "Airline is not funded.");
+  });
+
+  /*
+  it('(airline) can register another airline using registerAirline()', async () => {
+    // ARRANGE
+    let newAirline = accounts[2];
+
+    // ACT
+    try {
+        await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
+    }
+    catch(e) {
+
+    }
+    let result = await config.flightSuretyData.isAirlineRegistered.call(newAirline); 
+
+    // ASSERT
+    assert.equal(result, true, "Airline should be able to register another airline after it has provided funding");
+  });
+  */
+
   // Can register an airline
   // Can only register airline once (cannot register twice)
   // Can fund an airline

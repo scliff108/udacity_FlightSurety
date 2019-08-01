@@ -40,6 +40,19 @@ export default class Contract {
             .call({ from: self.owner}, callback);
     }
 
+    setOperatingStatus(mode, callback) {
+        let self = this;
+        self.flightSuretyApp.methods
+            .setOperatingStatus(mode)
+            .send({from:self.owner}, (error, result) => {
+                if (error) {
+                    console.log(error);
+                } else {
+                    console.log(result);
+                }
+            });
+    }
+
     fetchFlightStatus(flight, callback) {
         let self = this;
         let payload = {
@@ -52,5 +65,19 @@ export default class Contract {
             .send({ from: self.owner}, (error, result) => {
                 callback(error, payload);
             });
+    }
+
+    registerAirline(airline, callback) {
+        let self = this;
+        self.flightSuretyApp.methods
+            .registerAirline(airline)
+            .send({from: this.airlines[0]}, callback);
+    }
+
+    fundAirline(amount, callback) {
+        let self = this;
+        self.flightSuretyApp.methods
+            .fundAirline()
+            .send({from: this.airlines[0], value: amount}, callback);
     }
 }

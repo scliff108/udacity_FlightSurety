@@ -5,7 +5,7 @@ body {
 }
 
 .container {
-    margin-top: 400px;
+    margin-top: 80px;
     background-color: #000;
     opacity: 0.9;
     color: #fff;
@@ -14,6 +14,8 @@ body {
 
 .top-20 {
     margin-top: 20px;
+    padding: 10px;
+    border: 1px solid white;
 }
 
 h5 {
@@ -37,6 +39,6 @@ label.form {
     font-size: 14px;
     margin-right: 20px;
 }
-input {
-    margin-right: 30px;
+input, select {
+    margin: 10px 20px;
 }
