@@ -147,8 +147,16 @@ contract FlightSuretyApp {
     /**
      * @dev Check if the contract is operational
      */
-    function isOperational() public view returns(bool) {
+    function isOperational() public view requireContractOwner returns(bool) {
         return operational;
+    }
+
+    /**
+    * @dev Sets contract operations on/off
+    * When operational mode is disabled, all write transactions except for this one will fail
+    */
+    function setOperatingStatus(bool mode) external requireContractOwner {
+        operational = mode;
     }
 
     /********************************************************************************************/
@@ -202,9 +210,10 @@ contract FlightSuretyApp {
         requireAirlineIsNotFunded(msg.sender)
         requireSufficientFunding
         calculateRefund
+        returns(bool)
     {
         address(uint160(address(flightSuretyData))).transfer(AIRLINE_REGISTRATION_FEE);
-        flightSuretyData.fundAirline(msg.sender, AIRLINE_REGISTRATION_FEE);
+        return flightSuretyData.fundAirline(msg.sender, AIRLINE_REGISTRATION_FEE);
     }
 
    /**
@@ -213,22 +222,22 @@ contract FlightSuretyApp {
     */
     function registerFlight
     (
-        string calldata flightName,
+        string calldata flightNumber,
         uint256 departure,
         string calldata destination
     )
         external
         requireIsOperational
         requireIsAirlineFunded(msg.sender)
-        requireFlightIsNotRegistered(getFlightKey(msg.sender, flightName, departure))
+        requireFlightIsNotRegistered(getFlightKey(msg.sender, flightNumber, departure))
         returns(bytes32)
     {
         // TODO
-        bytes32 flightKey = getFlightKey(msg.sender, flightName, departure);
+        bytes32 flightKey = getFlightKey(msg.sender, flightNumber, departure);
         flightSuretyData.registerFlight(
             flightKey,
             msg.sender,
-            flightName,
+            flightNumber,
             destination,
             departure
         );
@@ -386,29 +395,3 @@ contract FlightSuretyApp {
     }
 
 }
-
-/*
-contract FlightSuretyData {
-    function isOperational() public view returns(bool);
-    function isAirlineRegistered(address airline) public view returns(bool);
-    function isAirlineFunded(address airline) public view returns(bool);
-    function registerAirline(address newAirline, address registeringAirline) external;
-    function fundAirline(address airline) external payable;
-    function getRegisteredAirlineCount() external returns(uint256);
-    function registerFlight(
-        bytes32 flightKey,
-        address registeringAirline,
-        string calldata flight,
-        uint256 timestamp,
-        string calldata departTime,
-        string calldata destination
-    ) external;
-    function buyInsurance(
-        bytes32 flightKey,
-        address passenger,
-        uint256 amount,
-        uint256 payout
-    ) external payable;
-    function pay(address payoutAddress) external;
-}
-*/

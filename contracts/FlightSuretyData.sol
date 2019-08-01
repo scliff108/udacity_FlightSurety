@@ -27,7 +27,7 @@ contract FlightSuretyData {
         bool isRegistered;
         uint256 timeOfCreation;
         address airline;
-        string name;
+        string number;
         string destination;
         uint256 timeOfDeparture;
         uint8 statusCode;
@@ -163,7 +163,7 @@ contract FlightSuretyData {
     * @dev Check if airline is funded
     * @return Airline Funded (true/false)
     */
-    function isAirlineFunded(address airline) public view requireIsOperational returns(bool) {
+    function isAirlineFunded(address airline) public view returns(bool) {
         return airlines[airline].isFunded;
     }
 
@@ -190,7 +190,7 @@ contract FlightSuretyData {
     {
         // Voting handled in FlightSuretyApp
         airlines[newAirline] = Airline(true, false, 0);
-        registeredAirlineCount.add(1);
+        registeredAirlineCount = registeredAirlineCount.add(1);
         emit airlineRegistered(newAirline);
     }
 
@@ -202,12 +202,13 @@ contract FlightSuretyData {
         external
         requireIsOperational
         requireAirlineIsNotFunded(airline)
+        returns(bool)
     {
-        // Money handled in FlightSuretyApp
         airlines[airline].isFunded = true;
-        airlines[airline].funds.add(amount);
-        fundedAirlineCount.add(1);
+        airlines[airline].funds = airlines[airline].funds.add(amount);
+        fundedAirlineCount = fundedAirlineCount.add(1);
         emit airlineFunded(airline);
+        return airlines[airline].isFunded;
     }
 
     /**
@@ -218,11 +219,19 @@ contract FlightSuretyData {
         return registeredAirlineCount;
     }
 
+    /**
+     * @dev Get the number of airlines already funded
+     * @return Number of funded airlines
+     */
+    function getFundedAirlineCount() public view requireIsOperational returns(uint256) {
+        return fundedAirlineCount;
+    }
+
     function registerFlight
     (
         bytes32 flightKey,
         address airline,
-        string calldata flightName,
+        string calldata flightNumber,
         string calldata destination,
         uint256 departure
     )
@@ -235,7 +244,7 @@ contract FlightSuretyData {
         flights[flightKey].isRegistered = true;
         flights[flightKey].timeOfCreation = now;
         flights[flightKey].airline = airline;
-        flights[flightKey].name = flightName;
+        flights[flightKey].number = flightNumber;
         flights[flightKey].destination = destination;
         flights[flightKey].timeOfDeparture = departure;
         flights[flightKey].statusCode = 0;
