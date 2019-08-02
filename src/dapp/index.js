@@ -13,7 +13,6 @@ import './flightsurety.css';
         // Read transaction
         function getOperationalStatus(){
                 contract.isOperational((error, result) => {
-                console.log(error,result);
                 display('Operational Status', 'Check if contract is operational', [ { label: 'Operational Status', error: error, value: result} ]);
             });
         }
@@ -28,41 +27,44 @@ import './flightsurety.css';
                 if (!error) {
                     if (result) {
                         contract.setOperatingStatus(false);
-                        console.log("CURRENT MODE JUST SET TO FALSE");
                     } else if (!result) {
                         contract.setOperatingStatus(true);
-                        console.log("CURRENT MODE JUST SET TO TRUE");
                     }
                 }
             });
         });
-    
-
-        // User-submitted transaction
-        DOM.elid('submit-oracle').addEventListener('click', () => {
-            let flight = DOM.elid('flight-number').value;
-            // Write transaction
-            contract.fetchFlightStatus(flight, (error, result) => {
-                display('Oracles', 'Trigger oracles', [ { label: 'Fetch Flight Status', error: error, value: result.flight + ' ' + result.timestamp} ]);
-            });
-        });
-
-        DOM.elid('fund-airline').addEventListener('click', () => {
-            let amount = DOM.elid('funding-amount').value;
-            contract.fundAirline(amount, (error, result) => {
-                display('Airlines', 'Funded Airlines', [ { label: 'Transaction', error: error, value: result}])
-            })
-        })
 
         DOM.elid('register-airline').addEventListener('click', () => {
             let airline = DOM.elid('airline-address').value;
             if (airline) {
                 contract.registerAirline(airline, (error, result) => {
-                    display('Airlines', 'Registered Airlines', [ { label: 'Transaction', error: error, value: result} ])
-                })
+                    errorResult(error, result);
+                });
             }
         });
-    
+
+        DOM.elid('fund-airline').addEventListener('click', () => {
+            let amount = DOM.elid('funding-amount').value;
+            contract.fundAirline(amount, (error, result) => {
+                errorResult(error, result);
+            });
+        });
+
+        DOM.elid('register-flight').addEventListener('click', () => {
+            let flight = DOM.elid('flight-number').value;
+            contract.registerFlight(flight, (error, result) => {
+                errorResult(error, result);
+            });
+        });
+        
+        // User-submitted transaction
+        DOM.elid('get-flight-status').addEventListener('click', () => {
+            let flight = DOM.elid('flight-number-status').value;
+            // Write transaction
+            contract.fetchFlightStatus(flight, (error, result) => {
+                display('Oracles', 'Trigger oracles', [ { label: 'Fetch Flight Status', error: error, value: result.flight + ' ' + result.timestamp} ]);
+            });
+        });
     });
     
 
@@ -81,12 +83,12 @@ function display(title, description, results) {
         section.appendChild(row);
     })
     displayDiv.append(section);
-
 }
 
-
-
-
-
-
-
+function errorResult(error, result) {
+    if (error) {
+        console.log(error);
+    } else {
+        console.log(result);
+    }
+}

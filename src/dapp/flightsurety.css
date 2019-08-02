@@ -1,7 +1,7 @@
 body {
     background-image: url('flight.jpg'); /* Source: iStockPhoto */
     background-repeat: no-repeat;
-    background-size: cover;
+    background-size: contain;
 }
 
 .container {

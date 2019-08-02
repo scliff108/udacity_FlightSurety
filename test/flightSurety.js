@@ -1,11 +1,14 @@
 var Test = require('../config/testConfig.js');
 var BigNumber = require('bignumber.js');
+var Web3 = require('web3');
 
 contract('Flight Surety Tests', async (accounts) => {
 
   var config;
+  var web3;
   before('setup contract', async () => {
     config = await Test.Config(accounts);
+    web3 = new Web3(new Web3.providers.HttpProvider(config.url));
     //await config.flightSuretyData.authorizeCaller(config.flightSuretyApp.address);
   });
 
@@ -127,24 +130,26 @@ contract('Flight Surety Tests', async (accounts) => {
     assert.equal(result, true, "Airline is not funded.");
   });
 
-  /*
+  
   it('(airline) can register another airline using registerAirline()', async () => {
     // ARRANGE
     let newAirline = accounts[2];
+    let result = false;
 
     // ACT
     try {
+        await config.flightSuretyApp.fundAirline({from: config.firstAirline, value: web3.utils.toWei('10', 'ether')});
         await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
     }
     catch(e) {
-
+      console.log(e)
     }
-    let result = await config.flightSuretyData.isAirlineRegistered.call(newAirline); 
+    result = await config.flightSuretyData.isAirlineRegistered.call(newAirline);
 
     // ASSERT
     assert.equal(result, true, "Airline should be able to register another airline after it has provided funding");
   });
-  */
+  
 
   // Can register an airline
   // Can only register airline once (cannot register twice)

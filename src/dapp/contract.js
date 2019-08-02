@@ -78,6 +78,14 @@ export default class Contract {
         let self = this;
         self.flightSuretyApp.methods
             .fundAirline()
-            .send({from: this.airlines[0], value: amount}, callback);
+            .send({from: this.airlines[0], value: this.web3.utils.toWei(amount, 'ether')}, callback);
+    }
+
+    registerFlight(flightNumber, callback) {
+        let self = this;
+        let departure = Date.now();
+        self.flightSuretyApp.methods
+            .registerFlight(flightNumber, departure)
+            .send({from: this.airlines[0]}, callback);
     }
 }

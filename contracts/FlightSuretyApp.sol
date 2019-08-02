@@ -209,7 +209,6 @@ contract FlightSuretyApp {
         requireIsAirlineRegistered(msg.sender)
         requireAirlineIsNotFunded(msg.sender)
         requireSufficientFunding
-        calculateRefund
         returns(bool)
     {
         address(uint160(address(flightSuretyData))).transfer(AIRLINE_REGISTRATION_FEE);
@@ -223,8 +222,7 @@ contract FlightSuretyApp {
     function registerFlight
     (
         string calldata flightNumber,
-        uint256 departure,
-        string calldata destination
+        uint256 departure
     )
         external
         requireIsOperational
@@ -236,12 +234,10 @@ contract FlightSuretyApp {
         bytes32 flightKey = getFlightKey(msg.sender, flightNumber, departure);
         flightSuretyData.registerFlight(
             flightKey,
+            departure,
             msg.sender,
-            flightNumber,
-            destination,
-            departure
+            flightNumber
         );
-        return flightKey;
     }
 
    /**
@@ -392,6 +388,9 @@ contract FlightSuretyApp {
         }
 
         return random;
+    }
+
+    function () external payable {
     }
 
 }
