@@ -1,4 +1,5 @@
 import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
+import FlightSuretyData from '../../build/contracts/FlightSuretyData.json';
 import Config from './config.json';
 import Web3 from 'web3';
 
@@ -8,12 +9,15 @@ export default class Contract {
         let config = Config[network];
         this.web3 = new Web3(new Web3.providers.HttpProvider(config.url));
         this.flightSuretyApp = new this.web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
+        this.flightSuretyData = new this.web3.eth.Contract(FlightSuretyData.abi, config.dataAddress);
         this.initialize(callback);
         this.owner = null;
         this.airlines = [];
         this.passengers = [];
+        
+        
     }
-
+    
     initialize(callback) {
         this.web3.eth.getAccounts((error, accts) => {
            
@@ -83,9 +87,29 @@ export default class Contract {
 
     registerFlight(flightNumber, callback) {
         let self = this;
-        let departure = Date.now();
+        let departure = Math.floor(Date.now() / 1000);
+        console.log(departure);
         self.flightSuretyApp.methods
             .registerFlight(flightNumber, departure)
-            .send({from: this.airlines[0]}, callback);
+            .send({from: this.airlines[0]})
+                .on('transactionHash', function(hash) {
+                    console.log(hash);
+                })
+                .on('receipt', function(receipt) {
+                    console.log(receipt);
+                });
+    }
+
+    getRegisteredFlights() {
+        let self = this;
+        self.flightSuretyApp.methods
+            .getRegisteredFlights()
+            .call((error, result) => {
+                if (error) {
+                    console.log(error);
+                } else {
+                    console.log(result);
+                }
+            });
     }
 }

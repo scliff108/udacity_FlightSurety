@@ -1,4 +1,4 @@
-pragma solidity ^0.5.8;
+pragma solidity ^0.5.10;
 
 import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -25,11 +25,12 @@ contract FlightSuretyData {
     // Flights
     struct Flight {
         bool sIsRegistered;
-        uint256 sDepartureTime;
         address sAirline;
         string sFlightNumber;
         uint8 sStatusCode;
+        // uint sDepartureTime;
     }
+    bytes32[] public registeredFlights;
     mapping(bytes32 => Flight) private flights;
 
     // Insurance Claims
@@ -230,18 +231,40 @@ contract FlightSuretyData {
     function registerFlight
     (
         bytes32 flightKey,
-        uint256 departure,
+        // uint departure,
         address airline,
-        string calldata flightNumber
+        string memory flightNumber
     )
-        external
+        public
         requireIsOperational
         requireIsAirlineFunded(airline)
         requireFlightIsNotRegistered(flightKey)
     {
-        flights[flightKey] = Flight(true, departure, airline, flightNumber, 0);
+        flights[flightKey] = Flight(
+            true,
+            airline,
+            flightNumber,
+            0
+            // departure // Causing revert error
+        );
         emit flightRegistered(flightKey);
+        registeredFlights.push(flightKey);
     }
+
+    function getRegisteredFlights() public view requireIsOperational returns(bytes32[] memory) {
+        return registeredFlights;
+    }
+
+/*
+    function processFlightStatus (bytes32 flightKey, uint8 statusCode) external requireIsOperational {
+        if (flights[flightKey].sStatusCode == 0) {
+            flights[flightKey].sStatusCode = statusCode;
+            if (statusCode == 20) {
+                creditInsurees(flightKey);
+            }
+        }
+    }
+    */
 
    /**
     * @dev Buy insurance for a flight
@@ -253,7 +276,7 @@ contract FlightSuretyData {
     /**
     *  @dev Credits payouts to insurees
     */
-    function creditInsurees() external pure{
+    function creditInsurees(bytes32 flightKey) internal requireIsOperational {
         // TODO
     }
 

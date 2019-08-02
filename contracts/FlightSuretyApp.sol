@@ -1,4 +1,4 @@
-pragma solidity ^0.5.8;
+pragma solidity ^0.5.10;
 
 import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./FlightSuretyData.sol";
@@ -222,7 +222,7 @@ contract FlightSuretyApp {
     function registerFlight
     (
         string calldata flightNumber,
-        uint256 departure
+        uint departure
     )
         external
         requireIsOperational
@@ -234,18 +234,32 @@ contract FlightSuretyApp {
         bytes32 flightKey = getFlightKey(msg.sender, flightNumber, departure);
         flightSuretyData.registerFlight(
             flightKey,
-            departure,
+            // departure,
             msg.sender,
             flightNumber
         );
+    }
+
+    function getRegisteredFlights() public view returns(bytes32[] memory) {
+        return flightSuretyData.getRegisteredFlights();
     }
 
    /**
     * @dev Called after oracle has updated flight status
     *
     */
-    function processFlightStatus(address airline, string memory flight, uint256 timestamp, uint8 statusCode) internal pure {
+    function processFlightStatus(
+        address airline,
+        string memory flight,
+        uint256 timestamp,
+        uint8 statusCode
+    )
+        public
+        requireIsOperational
+    {
         // TODO
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        // flightSuretyData.processFlightStatus(flightKey, statusCode);
     }
 
 

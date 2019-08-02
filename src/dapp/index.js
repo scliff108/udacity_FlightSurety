@@ -52,9 +52,8 @@ import './flightsurety.css';
 
         DOM.elid('register-flight').addEventListener('click', () => {
             let flight = DOM.elid('flight-number').value;
-            contract.registerFlight(flight, (error, result) => {
-                errorResult(error, result);
-            });
+            contract.registerFlight(flight); 
+            contract.getRegisteredFlights();
         });
         
         // User-submitted transaction
