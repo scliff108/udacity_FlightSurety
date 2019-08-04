@@ -14,8 +14,7 @@ export default class Contract {
         this.owner = null;
         this.airlines = [];
         this.passengers = [];
-        
-        
+        this.flights = [];
     }
     
     initialize(callback) {
@@ -48,13 +47,8 @@ export default class Contract {
         let self = this;
         self.flightSuretyApp.methods
             .setOperatingStatus(mode)
-            .send({from:self.owner}, (error, result) => {
-                if (error) {
-                    console.log(error);
-                } else {
-                    console.log(result);
-                }
-            });
+            .send({from:self.owner})
+                .then(console.log);
     }
 
     fetchFlightStatus(flight, callback) {
@@ -75,14 +69,16 @@ export default class Contract {
         let self = this;
         self.flightSuretyApp.methods
             .registerAirline(airline)
-            .send({from: this.airlines[0]}, callback);
+            .send({from: this.airlines[0]}, callback)
+                .then(console.log);
     }
 
     fundAirline(amount, callback) {
         let self = this;
         self.flightSuretyApp.methods
             .fundAirline()
-            .send({from: this.airlines[0], value: this.web3.utils.toWei(amount, 'ether')}, callback);
+            .send({from: this.airlines[0], value: this.web3.utils.toWei(amount, 'ether')})
+                .then(console.log);
     }
 
     registerFlight(flightNumber, callback) {
@@ -91,25 +87,37 @@ export default class Contract {
         console.log(departure);
         self.flightSuretyApp.methods
             .registerFlight(flightNumber, departure)
-            .send({from: this.airlines[0]})
-                .on('transactionHash', function(hash) {
-                    console.log(hash);
-                })
-                .on('receipt', function(receipt) {
-                    console.log(receipt);
-                });
+            .send({from: this.airlines[0], gas: 999999999})
+                .then(console.log);
     }
 
     getRegisteredFlights() {
         let self = this;
         self.flightSuretyApp.methods
             .getRegisteredFlights()
-            .call((error, result) => {
+            .call((error, flights) => {
+                self.flights = [];
                 if (error) {
                     console.log(error);
                 } else {
-                    console.log(result);
+                    for (let i = 0; i < flights.length; i++) {
+                        self.flightSuretyData.methods.
+                            flights(flights[i]).call(function(error, flight) {
+                                if (error) {
+                                    return error;
+                                } else {
+                                    self.flights.push(flight);
+                                }
+                            });
+                    }
                 }
             });
+    }
+
+    getFlightInformation(flight, callback) {
+        let self = this;
+        self.flightSuretyData.methods.flights(flight).call((error, flightInfo) => {
+            callback(error, flightInfo);
+        });
     }
 }

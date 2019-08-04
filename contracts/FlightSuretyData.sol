@@ -25,13 +25,14 @@ contract FlightSuretyData {
     // Flights
     struct Flight {
         bool sIsRegistered;
+        bytes32 sFlightKey;
         address sAirline;
         string sFlightNumber;
         uint8 sStatusCode;
-        // uint sDepartureTime;
+        uint256 sDepartureTime;
     }
+    mapping(bytes32 => Flight) public flights;
     bytes32[] public registeredFlights;
-    mapping(bytes32 => Flight) private flights;
 
     // Insurance Claims
     struct InsuranceClaim {
@@ -52,9 +53,9 @@ contract FlightSuretyData {
     * @dev Constructor
     *      The deploying account becomes contractOwner
     */
-    constructor(address airlineAddress) public {
+    constructor(address airlineAddress) public payable {
         contractOwner = msg.sender;
-        airlines[airlineAddress] = Airline(true, false, 0);
+        airlines[airlineAddress] = Airline(true, true, 0);
     }
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -64,6 +65,7 @@ contract FlightSuretyData {
     event airlineRegistered(address airline);
     event airlineFunded(address airline);
     event flightRegistered(bytes32 flightKey);
+    event processedFlightStatus(bytes32 flightKey, uint8 statusCode);
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -231,31 +233,32 @@ contract FlightSuretyData {
     function registerFlight
     (
         bytes32 flightKey,
-        // uint departure,
+        uint256 departure,
         address airline,
         string memory flightNumber
     )
         public
+        payable
         requireIsOperational
         requireIsAirlineFunded(airline)
         requireFlightIsNotRegistered(flightKey)
     {
         flights[flightKey] = Flight(
             true,
+            flightKey,
             airline,
             flightNumber,
-            0
-            // departure // Causing revert error
+            0,
+            departure
         );
-        emit flightRegistered(flightKey);
         registeredFlights.push(flightKey);
+        emit flightRegistered(flightKey);
     }
 
     function getRegisteredFlights() public view requireIsOperational returns(bytes32[] memory) {
         return registeredFlights;
     }
 
-/*
     function processFlightStatus (bytes32 flightKey, uint8 statusCode) external requireIsOperational {
         if (flights[flightKey].sStatusCode == 0) {
             flights[flightKey].sStatusCode = statusCode;
@@ -263,8 +266,8 @@ contract FlightSuretyData {
                 creditInsurees(flightKey);
             }
         }
+        emit processedFlightStatus(flightKey, statusCode);
     }
-    */
 
    /**
     * @dev Buy insurance for a flight

@@ -1,7 +1,6 @@
 pragma solidity ^0.5.10;
 
 import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./FlightSuretyData.sol";
 
 /************************************************** */
 /* FlightSurety Smart Contract                      */
@@ -227,14 +226,13 @@ contract FlightSuretyApp {
         external
         requireIsOperational
         requireIsAirlineFunded(msg.sender)
-        requireFlightIsNotRegistered(getFlightKey(msg.sender, flightNumber, departure))
-        returns(bytes32)
+        // requireFlightIsNotRegistered(getFlightKey(msg.sender, flightNumber, departure))
     {
         // TODO
         bytes32 flightKey = getFlightKey(msg.sender, flightNumber, departure);
         flightSuretyData.registerFlight(
             flightKey,
-            // departure,
+            departure,
             msg.sender,
             flightNumber
         );
@@ -259,7 +257,7 @@ contract FlightSuretyApp {
     {
         // TODO
         bytes32 flightKey = getFlightKey(airline, flight, timestamp);
-        // flightSuretyData.processFlightStatus(flightKey, statusCode);
+        flightSuretyData.processFlightStatus(flightKey, statusCode);
     }
 
 
@@ -407,4 +405,24 @@ contract FlightSuretyApp {
     function () external payable {
     }
 
+}
+
+contract FlightSuretyData {
+    function isOperational() public view returns(bool);
+    function setOperatingStatus(bool mode) external;
+    function isAirlineRegistered(address airline) public view returns(bool);
+    function isAirlineFunded(address airline) public view returns(bool);
+    function isFlightRegistered(bytes32 flightKey) public view returns(bool);
+    function registerAirline(address newAirline, address registeringAirline) external;
+    function fundAirline(address airline, uint256 amount) external returns(bool);
+    function getRegisteredAirlineCount() public view returns(uint256);
+    function getFundedAirlineCount() public view returns(uint256);
+    function registerFlight(bytes32 flightKey, uint256 departure, address airline, string memory flightNumber) public payable;
+    function getRegisteredFlights() public view returns(bytes32[] memory);
+    function processFlightStatus (bytes32 flightKey, uint8 statusCode) external;
+    function buyInsurance(bytes32 flightKey, address passenger, uint256 amount, uint256 payout) external payable;
+    function creditInsurees(bytes32 flightKey) internal;
+    function pay(address payoutAddress) external;
+    function getFlightKey(address airline, string memory flight, uint256 timestamp) internal pure returns(bytes32);
+    function fund() public payable;
 }
