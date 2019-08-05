@@ -51,17 +51,12 @@ export default class Contract {
                 .then(console.log);
     }
 
-    fetchFlightStatus(flight, callback) {
+    fetchFlightStatus(airline, flight, timestamp, callback) {
         let self = this;
-        let payload = {
-            airline: self.airlines[0],
-            flight: flight,
-            timestamp: Math.floor(Date.now() / 1000)
-        } 
         self.flightSuretyApp.methods
-            .fetchFlightStatus(payload.airline, payload.flight, payload.timestamp)
+            .fetchFlightStatus(airline, flight, timestamp)
             .send({ from: self.owner}, (error, result) => {
-                callback(error, payload);
+                callback(error, result);
             });
     }
 
@@ -81,42 +76,31 @@ export default class Contract {
                 .then(console.log);
     }
 
-    registerFlight(flightNumber, callback) {
+    registerFlight(flightNumber, departureLocation, arrivalLocation, callback) {
         let self = this;
-        let departure = Math.floor(Date.now() / 1000);
-        console.log(departure);
+        let timestamp = Math.floor(Date.now() / 1000);
         self.flightSuretyApp.methods
-            .registerFlight(flightNumber, departure)
+            .registerFlight(flightNumber, timestamp, departureLocation, arrivalLocation)
             .send({from: this.airlines[0], gas: 999999999})
                 .then(console.log);
     }
 
-    getRegisteredFlights() {
+    async getRegisteredFlights() {
         let self = this;
-        self.flightSuretyApp.methods
-            .getRegisteredFlights()
-            .call((error, flights) => {
-                self.flights = [];
-                if (error) {
-                    console.log(error);
-                } else {
-                    for (let i = 0; i < flights.length; i++) {
-                        self.flightSuretyData.methods.
-                            flights(flights[i]).call(function(error, flight) {
-                                if (error) {
-                                    return error;
-                                } else {
-                                    self.flights.push(flight);
-                                }
-                            });
-                    }
-                }
-            });
+        let countRegisteredFlights = parseInt(await self.flightSuretyData.methods.getCountRegisteredFlights().call());
+        self.flights = [];
+
+        for (let i = 0; i < countRegisteredFlights; i++) {
+            let flightKey = await self.flightSuretyData.methods.registeredFlights(i).call();
+            let flight = await self.flightSuretyData.methods.flights(flightKey).call();
+            self.flights.push(flight)
+        }
+        self.flights.sort((a,b) => (a.sStatusCode > b.sStatusCode) ? 1 : ((b.sStatusCode > a.sStatusCode) ? -1 : 0));
     }
 
-    getFlightInformation(flight, callback) {
+    getFlightInformation(flightKey, callback) {
         let self = this;
-        self.flightSuretyData.methods.flights(flight).call((error, flightInfo) => {
+        self.flightSuretyData.methods.flights(flightKey).call((error, flightInfo) => {
             callback(error, flightInfo);
         });
     }

@@ -2,6 +2,22 @@
 import DOM from './dom';
 import Contract from './contract';
 import './flightsurety.css';
+let statuses = [
+    "Unknown",
+    "On Time",
+    "Late - Airline",
+    "Late - Weather",
+    "Late - Technical",
+    "Late - Other"
+];
+let statusColor = [
+    "primary",
+    "success",
+    "danger",
+    "secondary",
+    "warning",
+    "dark"
+];
 
 
 (async() => {
@@ -28,16 +44,22 @@ import './flightsurety.css';
 
         function getFlights() {
             contract.getRegisteredFlights();
-            let select = DOM.elid('flight-number-status-select');
-            while (select.hasChildNodes()) {
-                select.removeChild(select.firstChild);
+            let flightsContainer = DOM.elid('flights-container');
+            while (flightsContainer.hasChildNodes()) {
+                flightsContainer.removeChild(flightsContainer.firstChild);
             }
             if (contract.flights.length > 0) {
                 contract.flights.forEach(function(flight) {
-                    addFlightToList(flight.sFlightKey, flight.sFlightNumber);
+                    addFlightCard(
+                        flight.sFlightNumber,
+                        flight.sFlightKey,
+                        flight.sAirline,
+                        flight.sDepartureLocation,
+                        flight.sArrivalLocation,
+                        flight.sStatusCode,
+                        flight.sTimestamp
+                    );
                 });
-            } else {
-                addFlightToList("", "No Flights Available");
             }
         }
         getFlights();
@@ -77,21 +99,20 @@ import './flightsurety.css';
         });
 
         DOM.elid('register-flight').addEventListener('click', () => {
-            let flight = DOM.elid('flight-number').value;
-            contract.registerFlight(flight); 
-            contract.getRegisteredFlights();
+            let flightNumber = DOM.elid('flight-number').value;
+            let departureLocation = DOM.elid('departure-location').value;
+            let arrivalLocation = DOM.elid('arrival-location').value;
+            contract.registerFlight(flightNumber, departureLocation, arrivalLocation); 
         });
         
         // User-submitted transaction
-        DOM.elid('get-flight-status').addEventListener('click', () => {
-            let select = DOM.elid('flight-number-status-select');
-            let flight = select.options[select.selectedIndex].value;
+        function getFlightStatus(airline, flight, flightKey, flightTimeStamp) {
             // Write transaction
-            contract.fetchFlightStatus(flight, (error, result) => {
+            contract.fetchFlightStatus(airline, flight, flightTimeStamp, (error, result) => {
                 if (error) {
                     displayAlert("danger", "Get Flight Status", error);
                 } else {
-                    contract.getFlightInformation(result.flight, (error, result) => {
+                    contract.getFlightInformation(flightKey, (error, result) => {
                         switch(result.sStatusCode) {
                             case "0":
                                 displayAlert('primary', "Flight Status", "Flight status unknown at this point. Check back in later.");
@@ -112,13 +133,89 @@ import './flightsurety.css';
                                 displayAlert('dark', "Flight Status", "Flight is late for some reason, but it is not our fault...I swear.");
                                 break;
                             default:
-                                    console.log("DEFAULT");
                                 displayAlert("danger", "Flight Status", "We were unable to get the flight status.");
+                                break;
                         }
                     });
                 }
             });
-        });
+        }
+
+        function buyInsurance() {
+            console.log("Buy Insurance");
+        }
+
+        function claimInsurance() {
+            console.log("Claim Insurance");
+        }
+
+        function addFlightCard(flight, flightKey, airline, departure, arrival, status, timestamp) {
+            let flightsContainer = DOM.elid("flights-container");
+            let col = document.createElement('div');
+            let card = document.createElement('div');
+            let body = document.createElement('div');
+            let h2 = document.createElement('h2');
+            let h3 = document.createElement('h3');
+            let hr = document.createElement('hr');
+            let pDeparture = document.createElement('p');
+            let pArrival = document.createElement('p');
+            let statusIndex = parseInt(status)/10
+            let cardClass = "bg-" + statusColor[statusIndex];
+        
+            col.classList = "col-sm-4";
+            card.classList = "card " + cardClass;
+            body.classList = "card-body";
+            h2.classList = "card-title";
+            h3.classList = "card-subtitle mb-2";
+        
+            h2.innerHTML = flight;
+            h3.innerHTML = statuses[statusIndex];
+            pDeparture.innerHTML = "From: " + departure;
+            pArrival.innerHTML = "To: " + arrival;
+        
+            flightsContainer.appendChild(col);
+            col.append(card);
+            card.append(body);
+            body.append(h2);
+            body.append(h3);
+            body.append(hr);
+            body.append(pDeparture);
+            body.append(pArrival);
+        
+            if (status == "0") {
+                let insuranceButton = document.createElement("button");
+                let flightStatusButton = document.createElement("button");
+                let br = document.createElement("br");
+        
+                insuranceButton.classList = "btn btn-danger";
+                flightStatusButton.classList = "btn btn-warning";
+        
+                insuranceButton.innerHTML = "Buy Insurance";
+                flightStatusButton.innerHTML = "Get Flight Status";
+        
+                body.append(insuranceButton);
+                body.append(br);
+                body.append(flightStatusButton);
+        
+                flightStatusButton.addEventListener('click', () => {
+                    getFlightStatus(airline, flight, flightKey, timestamp);
+                });
+                insuranceButton.addEventListener('click', buyInsurance);
+                // Add Buy Insurance Button
+            } else if (status == "20") {
+                let pInsuranceMoney = document.createElement("p")
+                let claimButton = document.createElement("button");
+                claimButton.classList = "btn btn-success";
+                pInsuranceMoney.innerHTML = "INSURANCE MONEY";
+                claimButton.innerHTML = "Claim Insurance";
+                body.append(pInsuranceMoney);
+                body.append(claimButton);
+                claimButton.addEventListener('click', claimInsurance());
+                // If insurance not claimed
+                    // Add Claim Button
+            }
+        }
+        
     });
 
 })();
@@ -146,10 +243,3 @@ function displayAlert(type, heading, content) {
     alert.appendChild(p);
 }
 
-function addFlightToList(value, text) {
-    let select = DOM.elid('flight-number-status-select');
-    let opt = document.createElement('option');
-    opt.value = value;
-    opt.innerHTML = text;
-    select.appendChild(opt)
-}

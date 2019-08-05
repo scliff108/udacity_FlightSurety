@@ -29,7 +29,9 @@ contract FlightSuretyData {
         address sAirline;
         string sFlightNumber;
         uint8 sStatusCode;
-        uint256 sDepartureTime;
+        uint256 sTimestamp;
+        string sDepartureLocation;
+        string sArrivalLocation;
     }
     mapping(bytes32 => Flight) public flights;
     bytes32[] public registeredFlights;
@@ -61,11 +63,11 @@ contract FlightSuretyData {
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
 
-    // Delinquent Airline (Cannot pay insurance claim)
-    event airlineRegistered(address airline);
-    event airlineFunded(address airline);
-    event flightRegistered(bytes32 flightKey);
-    event processedFlightStatus(bytes32 flightKey, uint8 statusCode);
+    event AirlineRegistered(address airline);
+    event AirlineFunded(address airline);
+    event FlightRegistered(bytes32 flightKey);
+    event ProcessedFlightStatus(bytes32 flightKey, uint8 statusCode);
+    event FlightStatusUnknown(bytes32 flightKey, uint8 statusCode);
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -193,7 +195,7 @@ contract FlightSuretyData {
         // Voting handled in FlightSuretyApp
         airlines[newAirline] = Airline(true, false, 0);
         registeredAirlineCount = registeredAirlineCount.add(1);
-        emit airlineRegistered(newAirline);
+        emit AirlineRegistered(newAirline);
     }
 
     /**
@@ -210,7 +212,7 @@ contract FlightSuretyData {
         airlines[airline].sIsFunded = true;
         airlines[airline].sFunds = airlines[airline].sFunds.add(amount);
         fundedAirlineCount = fundedAirlineCount.add(1);
-        emit airlineFunded(airline);
+        emit AirlineFunded(airline);
         return airlines[airline].sIsFunded;
     }
 
@@ -233,9 +235,11 @@ contract FlightSuretyData {
     function registerFlight
     (
         bytes32 flightKey,
-        uint256 departure,
+        uint256 timestamp,
         address airline,
-        string memory flightNumber
+        string memory flightNumber,
+        string memory departureLocation,
+        string memory arrivalLocation
     )
         public
         payable
@@ -249,24 +253,30 @@ contract FlightSuretyData {
             airline,
             flightNumber,
             0,
-            departure
+            timestamp,
+            departureLocation,
+            arrivalLocation
         );
         registeredFlights.push(flightKey);
-        emit flightRegistered(flightKey);
+        emit FlightRegistered(flightKey);
     }
 
-    function getRegisteredFlights() public view requireIsOperational returns(bytes32[] memory) {
-        return registeredFlights;
+    function getCountRegisteredFlights() public view requireIsOperational returns(uint256) {
+        return registeredFlights.length;
     }
 
-    function processFlightStatus (bytes32 flightKey, uint8 statusCode) external requireIsOperational {
+    function processFlightStatus(address airline, string calldata flight, uint256 timestamp, uint8 statusCode) external requireIsOperational {
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+
         if (flights[flightKey].sStatusCode == 0) {
             flights[flightKey].sStatusCode = statusCode;
             if (statusCode == 20) {
                 creditInsurees(flightKey);
             }
+            emit ProcessedFlightStatus(flightKey, flights[flightKey].sStatusCode);
+        } else {
+            emit FlightStatusUnknown(flightKey, flights[flightKey].sStatusCode);
         }
-        emit processedFlightStatus(flightKey, statusCode);
     }
 
    /**

@@ -7,9 +7,16 @@ body {
 .container {
     margin-top: 80px;
     background-color: #000;
-    opacity: 0.9;
+    opacity: 0.95;
     color: #fff;
     padding: 40px;
+}
+
+div.btn-group {
+    width: inherit;
+    margin: 0 auto;
+    text-align: center;
+    display: inline-block;
 }
 
 .top-20 {
@@ -41,4 +48,14 @@ label.form {
 }
 input, select {
     margin: 10px 20px;
+}
+
+a:hover {
+    cursor: pointer;
+}
+.card {
+    margin: 10px;
+}
+button {
+    margin-bottom: 10px;
 }

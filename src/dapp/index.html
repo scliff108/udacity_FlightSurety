@@ -6,9 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>FlightSurety</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 
@@ -24,6 +22,16 @@
 
     <main class="container">
 
+        <div class="row justify-content-center">
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="user-role-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">User Role</button>
+                <div class="dropdown-menu" aria-labelledby="user-role-dropdown">
+                    <a class="dropdown-item" id="airline-mode"><i data-feather="send"></i> Airline</a>
+                    <a class="dropdown-item" id="passenger-mode"><i data-feather="user"></i> Passenger</a>
+                </div>
+            </div>
+        </div>
+
         <div class="top-20">
             <h2>Get Operational Status</h2>
             <btn class="btn btn-primary" id="get-operational">Get Operational Status</btn>
@@ -34,7 +42,7 @@
             <btn class="btn btn-primary" id="toggle-operational">Toggle Operational Status</btn>
         </div>
 
-        <div class="top-20">
+        <div class="top-20 airline">
             <h2>Register Airline</h2>
             <label for="airline-address">Airline Address:</label>
             <input type="text" id="airline-address" placeholder="Airline Address">
@@ -42,7 +50,7 @@
             <btn class="btn btn-primary" id="register-airline">Register Airline</btn>
         </div>
 
-        <div class="top-20">
+        <div class="top-20 airline">
             <h2>Fund Registered Airline</h2>
             <label for="funding-amount" class="form">Funding Amount (eth):</label>
             <input type="number" id="funding-amount" min="10">
@@ -50,37 +58,28 @@
             <btn class="btn btn-primary" id="fund-airline">Fund Airline</btn>
         </div>
 
-        <div class="top-20">
+        <div class="top-20 airline">
             <h2>Register Flight</h2>
             <label for="flight-number">Flight Number:</label>
             <input type="text" id="flight-number" placeholder="Flight Number">
             <br />
-            <label for="departure-time">Departure Time:</label>
-            <input type="datetime-local" id="departure-time">
+            <label for="departure-location">Flying From:</label>
+            <input type="text" id="departure-location" placeholder="Flying From">
             <br />
-            <!--
-            <label for="departure-location">Departure Location:</label>
-            <input type="text" id="departure-location" placeholder="Departure Location">
+            <label for="arrival-location">Flying To:</label>
+            <input type="text" id="arrival-location" placeholder="Flying To">
             <br />
-            <label for="arrival-time">Arrival Time:</label>
-            <input type="date" id="arrival-time">
-            <br />
-            <label for="arrival-location">Arrival Location:</label>
-            <input type="text" id="arrival-location" placeholder="Arrival Location">
-            <br />
-            -->
             <btn class="btn btn-primary" id="register-flight">Register Flight</btn>
         </div>
 
         <div class="top-20">
-            <h2>Get Flight Status</h2>
-            <label for="flight-number-status">Flight Number:</label>
-            <select name="flight-list" id="flight-number-status-select">
-            </select>
+            <h2>Flights</h2>
             <btn class="btn btn-warning" id="refresh-flights">Refresh Flights</btn>
-            <br />
-            <btn class="btn btn-primary" id="get-flight-status">Get Flight Status</btn>
+            <div class="row" id="flights-container">
+            </div>
         </div>
+
+        
 
         <div class="top-20">
             <h2>Show Purchased Insurance:</h2>
@@ -97,6 +96,13 @@
             <btn class="btn btn-primary" id="withdraw-funds">Withdraw Funds</btn>
         </div>
     </main>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script>
+        feather.replace();
+    </script>
 
 </body>
 

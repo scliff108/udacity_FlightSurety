@@ -221,25 +221,23 @@ contract FlightSuretyApp {
     function registerFlight
     (
         string calldata flightNumber,
-        uint departure
+        uint256 timestamp,
+        string calldata departureLocation,
+        string calldata arrivalLocation
     )
         external
         requireIsOperational
         requireIsAirlineFunded(msg.sender)
-        // requireFlightIsNotRegistered(getFlightKey(msg.sender, flightNumber, departure))
     {
-        // TODO
-        bytes32 flightKey = getFlightKey(msg.sender, flightNumber, departure);
+        bytes32 flightKey = getFlightKey(msg.sender, flightNumber, timestamp);
         flightSuretyData.registerFlight(
             flightKey,
-            departure,
+            timestamp,
             msg.sender,
-            flightNumber
+            flightNumber,
+            departureLocation,
+            arrivalLocation
         );
-    }
-
-    function getRegisteredFlights() public view returns(bytes32[] memory) {
-        return flightSuretyData.getRegisteredFlights();
     }
 
    /**
@@ -252,12 +250,10 @@ contract FlightSuretyApp {
         uint256 timestamp,
         uint8 statusCode
     )
-        public
+        internal
         requireIsOperational
     {
-        // TODO
-        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
-        flightSuretyData.processFlightStatus(flightKey, statusCode);
+        flightSuretyData.processFlightStatus(airline, flight, timestamp, statusCode);
     }
 
 
@@ -284,7 +280,7 @@ contract FlightSuretyApp {
     uint256 public constant REGISTRATION_FEE = 1 ether;
 
     // Number of oracles that must respond for valid status
-    uint256 private constant MIN_RESPONSES = 3;
+    uint256 private constant MIN_RESPONSES = 1;
 
     struct Oracle {
         bool isRegistered;
@@ -310,9 +306,8 @@ contract FlightSuretyApp {
 
     // Event fired each time an oracle submits a response
     event FlightStatusInfo(address airline, string flight, uint256 timestamp, uint8 status);
-
     event OracleReport(address airline, string flight, uint256 timestamp, uint8 status);
-
+    event OracleRegistered(address oracle);
     // Event fired when flight status request is submitted
     // Oracles track this and if they have a matching index
     // they fetch data and submit a response
@@ -327,6 +322,8 @@ contract FlightSuretyApp {
         uint8[3] memory indexes = generateIndexes(msg.sender);
 
         oracles[msg.sender] = Oracle({isRegistered: true, indexes: indexes});
+
+        emit OracleRegistered(msg.sender);
     }
 
     function getMyIndexes() external view returns(uint8[3] memory) {
@@ -417,9 +414,19 @@ contract FlightSuretyData {
     function fundAirline(address airline, uint256 amount) external returns(bool);
     function getRegisteredAirlineCount() public view returns(uint256);
     function getFundedAirlineCount() public view returns(uint256);
-    function registerFlight(bytes32 flightKey, uint256 departure, address airline, string memory flightNumber) public payable;
-    function getRegisteredFlights() public view returns(bytes32[] memory);
-    function processFlightStatus (bytes32 flightKey, uint8 statusCode) external;
+    function registerFlight
+    (
+        bytes32 flightKey,
+        uint256 timestamp,
+        address airline,
+        string memory flightNumber,
+        string memory departureLocation,
+        string memory arrivalLocation
+    )
+        public
+        payable;
+    function getCountRegisteredFlights() public view returns(uint256);
+    function processFlightStatus(address airline, string calldata flight, uint256 timestamp, uint8 statusCode) external;
     function buyInsurance(bytes32 flightKey, address passenger, uint256 amount, uint256 payout) external payable;
     function creditInsurees(bytes32 flightKey) internal;
     function pay(address payoutAddress) external;
