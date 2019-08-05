@@ -24,7 +24,6 @@ contract FlightSuretyApp {
     uint256 AIRLINE_REGISTRATION_FEE = 10 ether;
     uint256 MAX_INSURANCE_PLAN = 1 ether;
     uint256 INSURANCE_PAYOUT = 150; // Must divide by 100 to get percentage payout
-    uint256 INSURANCE_PAYOUT_PERCENTAGE = INSURANCE_PAYOUT.div(100);
 
     // Airline Registration Helpers
     uint256 AIRLINE_VOTING_THRESHOLD = 4;
@@ -125,8 +124,8 @@ contract FlightSuretyApp {
     /**
      * @dev Modifier that requires sufficient funding to fund an airline
      */
-    modifier requireSufficientFunding() {
-        require(msg.value >= AIRLINE_REGISTRATION_FEE, "Insufficient Funds.");
+    modifier requireSufficientFunding(uint256 amount) {
+        require(msg.value >= amount, "Insufficient Funds.");
         _;
     }
 
@@ -137,6 +136,27 @@ contract FlightSuretyApp {
         _;
         uint refund = msg.value - AIRLINE_REGISTRATION_FEE;
         msg.sender.transfer(refund);
+    }
+
+    
+    modifier requireFlightIsRegistered(bytes32 flightKey) {
+        require(flightSuretyData.isFlightRegistered(flightKey), "Flight is not registered.");
+        _;
+    }
+    
+    modifier requireFlightIsNotLanded(bytes32 flightKey) {
+        require(!flightSuretyData.isFlightLanded(flightKey), "Flight has already landed");
+        _;
+    }
+
+    modifier requirePassengerNotInsuredForFlight(bytes32 flightKey, address passenger) {
+        require(!flightSuretyData.isPassengerInsuredForFlight(flightKey, passenger), "Passenger is already insured for flight");
+        _;
+    }
+
+    modifier requireLessThanMaxInsurance() {
+        require(msg.value <= MAX_INSURANCE_PLAN, "Value exceeds max insurance plan.");
+        _;
     }
 
     /********************************************************************************************/
@@ -207,7 +227,7 @@ contract FlightSuretyApp {
         requireIsOperational
         requireIsAirlineRegistered(msg.sender)
         requireAirlineIsNotFunded(msg.sender)
-        requireSufficientFunding
+        requireSufficientFunding(AIRLINE_REGISTRATION_FEE)
         returns(bool)
     {
         address(uint160(address(flightSuretyData))).transfer(AIRLINE_REGISTRATION_FEE);
@@ -267,6 +287,23 @@ contract FlightSuretyApp {
 
         emit OracleRequest(index, airline, flight, timestamp);
     }
+
+    function buyInsurance
+    (
+        bytes32 flightKey
+    )
+        public
+        payable
+        requireIsOperational
+        requireFlightIsRegistered(flightKey)
+        requireFlightIsNotLanded(flightKey)
+        requirePassengerNotInsuredForFlight(flightKey, msg.sender)
+        requireLessThanMaxInsurance()
+    {
+        address(uint160(address(flightSuretyData))).transfer(msg.value);
+        flightSuretyData.buyInsurance(flightKey, msg.sender, msg.value, INSURANCE_PAYOUT);
+    }
+
 
 
     /********************************************************************************************/
@@ -410,6 +447,8 @@ contract FlightSuretyData {
     function isAirlineRegistered(address airline) public view returns(bool);
     function isAirlineFunded(address airline) public view returns(bool);
     function isFlightRegistered(bytes32 flightKey) public view returns(bool);
+    function isFlightLanded(bytes32 flightKey) public view returns(bool);
+    function isPassengerInsuredForFlight(bytes32 flightKey, address passenger) public view returns(bool);
     function registerAirline(address newAirline, address registeringAirline) external;
     function fundAirline(address airline, uint256 amount) external returns(bool);
     function getRegisteredAirlineCount() public view returns(uint256);

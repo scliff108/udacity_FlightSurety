@@ -102,4 +102,10 @@ export default class Contract {
         let self = this;
         self.flightSuretyData.methods.flights(flightKey).call();
     }
+
+    buyInsurance(flightKey, amount) {
+        let self = this;
+        self.flightSuretyApp.methods.buyInsurance(flightKey)
+            .send({from: this.airlines[0], value: this.web3.utils.toWei(amount, 'ether'), gas: 999999999}).then(console.log);
+    }
 }

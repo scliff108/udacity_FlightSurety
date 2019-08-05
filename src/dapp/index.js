@@ -113,8 +113,9 @@ let statuses = [
             });
         }
 
-        function buyInsurance(amount) {
+        function buyInsurance(flightKey, amount) {
             console.log("Buy Insurance: " + amount);
+            contract.buyInsurance(flightKey, amount);
         }
 
         function claimInsurance() {
@@ -189,7 +190,7 @@ let statuses = [
                     getFlightStatus(airline, flight, flightKey, timestamp);
                 });
                 insuranceButton.addEventListener('click', () =>{
-                    buyInsurance(DOM.elid("amount-" + flightKey).value);
+                    buyInsurance(flightKey, DOM.elid("amount-" + flightKey).value);
                 });
             }
         }

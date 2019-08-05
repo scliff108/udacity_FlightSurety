@@ -99,6 +99,10 @@ async function listenForEvents() {
     logEvent(error, event, "FLIGHT STATUS UNKNOWN");
   });
 
+  flightSuretyData.events.PassengerInsured({}, (error, event) => {
+    logEvent(error, event, "PASSENGER INSURED");
+  })
+
 }
 
 function logEvent(error, event, title) {

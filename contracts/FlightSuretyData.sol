@@ -39,8 +39,7 @@ contract FlightSuretyData {
     // Insurance Claims
     struct InsuranceClaim {
         address sPassenger;
-        bytes32 sFlight;
-        uint256 sPayoutAmount;
+        uint256 sPuchaseAmount;
         uint256 sPayoutPercentage;
         bool sCredited;
     }
@@ -68,6 +67,7 @@ contract FlightSuretyData {
     event FlightRegistered(bytes32 flightKey);
     event ProcessedFlightStatus(bytes32 flightKey, uint8 statusCode);
     event FlightStatusUnknown(bytes32 flightKey, uint8 statusCode);
+    event PassengerInsured(bytes32 flightKey, address passenger, uint256 amount, uint256 payout);
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -131,6 +131,11 @@ contract FlightSuretyData {
         _;
     }
 
+    modifier requireIsFlightRegistered(bytes32 flightKey) {
+        require(flights[flightKey].sIsRegistered, "Flight is not registered");
+        _;
+    }
+
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -172,13 +177,29 @@ contract FlightSuretyData {
     }
 
     /**
-    * @dev Check if airline is registered
+    * @dev Check if flight is registered
     * @return Airline Registered (true/false)
     */
-    function isFlightRegistered(bytes32 flightKey) public view requireIsOperational returns(bool) {
+    function isFlightRegistered(bytes32 flightKey) public view returns(bool) {
         return flights[flightKey].sIsRegistered;
     }
 
+    function isFlightLanded(bytes32 flightKey) public view returns(bool) {
+        if (flights[flightKey].sStatusCode > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    function isPassengerInsuredForFlight(bytes32 flightKey, address passenger) public view returns(bool) {
+        InsuranceClaim[] memory insuranceClaims = flightInsuranceClaims[flightKey];
+        for (uint256 i = 0; i < insuranceClaims.length; i++) {
+            if (insuranceClaims[i].sPassenger == passenger) {
+                return true;
+            }
+        }
+        return false;
+    }
     /**
     * @dev Add an airline to the registration queue
     *      Can only be called from FlightSuretyApp contract
@@ -282,8 +303,27 @@ contract FlightSuretyData {
    /**
     * @dev Buy insurance for a flight
     */
-    function buyInsurance(bytes32 flightKey, address passenger, uint256 amount, uint256 payout) external payable {
-        // TODO
+    function buyInsurance
+    (
+        bytes32 flightKey,
+        address passenger,
+        uint256 amount,
+        uint256 payout
+    )
+        external
+        payable
+        requireIsOperational
+    {
+        require(isFlightRegistered(flightKey), "Flight is already registered");
+        require(!isFlightLanded(flightKey), "Flight has already landed");
+
+        flightInsuranceClaims[flightKey].push(InsuranceClaim(
+            passenger,
+            amount,
+            payout,
+            false
+        ));
+        emit PassengerInsured(flightKey, passenger, amount, payout);
     }
 
     /**
