@@ -100,8 +100,6 @@ export default class Contract {
 
     getFlightInformation(flightKey, callback) {
         let self = this;
-        self.flightSuretyData.methods.flights(flightKey).call((error, flightInfo) => {
-            callback(error, flightInfo);
-        });
+        self.flightSuretyData.methods.flights(flightKey).call();
     }
 }

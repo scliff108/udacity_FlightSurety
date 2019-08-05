@@ -3,22 +3,13 @@ import DOM from './dom';
 import Contract from './contract';
 import './flightsurety.css';
 let statuses = [
-    "Unknown",
-    "On Time",
-    "Late - Airline",
-    "Late - Weather",
-    "Late - Technical",
-    "Late - Other"
+    ["Unknown", "light", "eye"],
+    ["On Time", "success", "thumbs-up",], 
+    ["Late - Airline", "danger", "dollar-sign",], 
+    ["Late - Weather", "secondary", "cloud-lightning",], 
+    ["Late - Technical", "warning", "alert-triangle",], 
+    ["Late - Other", "dark", "alert-circle"] 
 ];
-let statusColor = [
-    "primary",
-    "success",
-    "danger",
-    "secondary",
-    "warning",
-    "dark"
-];
-
 
 (async() => {
 
@@ -32,11 +23,16 @@ let statusColor = [
                     if (error) {
                         displayAlert('danger', 'Operational Status', error);
                     } else {
-                        if (result == 'true') {
-                            displayAlert('success', 'Operational Status', result);
+                        let status = DOM.elid("operational-status");
+                            let i = document.createElement("i");
+                        if (result == true) {
+                            i.setAttribute("data-feather", "thumbs-up");
                         } else {
-                            displayAlert('danger', 'Operational Status', result);
+                            i.setAttribute("data-feather", "thumbs-down");
                         }
+                        status.innerHTML = result + " ";
+                        status.append(i);
+                        feather.replace();
                     }
             });
         }
@@ -112,37 +108,13 @@ let statusColor = [
                 if (error) {
                     displayAlert("danger", "Get Flight Status", error);
                 } else {
-                    contract.getFlightInformation(flightKey, (error, result) => {
-                        switch(result.sStatusCode) {
-                            case "0":
-                                displayAlert('primary', "Flight Status", "Flight status unknown at this point. Check back in later.");
-                                break;
-                            case "10":
-                                displayAlert('success', "Flight Status", "Flight landed on time.");
-                                break;
-                            case "20":
-                                displayAlert('danger', "Flight Status", "Flight was late due to the airline.");
-                                break;
-                            case "30":
-                                displayAlert('secondary', "Flight Status", "Flight late due to inclement weather.");
-                                break;
-                            case "40":
-                                displayAlert('warning', "Flight Status", "Flight late due to a technical reason.");
-                                break;
-                            case "50":
-                                displayAlert('dark', "Flight Status", "Flight is late for some reason, but it is not our fault...I swear.");
-                                break;
-                            default:
-                                displayAlert("danger", "Flight Status", "We were unable to get the flight status.");
-                                break;
-                        }
-                    });
+                    contract.getFlightInformation(flightKey);
                 }
             });
         }
 
-        function buyInsurance() {
-            console.log("Buy Insurance");
+        function buyInsurance(amount) {
+            console.log("Buy Insurance: " + amount);
         }
 
         function claimInsurance() {
@@ -156,20 +128,22 @@ let statusColor = [
             let body = document.createElement('div');
             let h2 = document.createElement('h2');
             let h3 = document.createElement('h3');
+            let i = document.createElement('i');
             let hr = document.createElement('hr');
             let pDeparture = document.createElement('p');
             let pArrival = document.createElement('p');
             let statusIndex = parseInt(status)/10
-            let cardClass = "bg-" + statusColor[statusIndex];
+            let cardClass = "bg-" + statuses[statusIndex][1];
         
             col.classList = "col-sm-4";
             card.classList = "card " + cardClass;
             body.classList = "card-body";
             h2.classList = "card-title";
             h3.classList = "card-subtitle mb-2";
+            i.setAttribute("data-feather", statuses[statusIndex][2]);
         
             h2.innerHTML = flight;
-            h3.innerHTML = statuses[statusIndex];
+            h3.innerHTML = statuses[statusIndex][0] + " ";
             pDeparture.innerHTML = "From: " + departure;
             pArrival.innerHTML = "To: " + arrival;
         
@@ -178,21 +152,35 @@ let statusColor = [
             card.append(body);
             body.append(h2);
             body.append(h3);
+            h3.append(i);
             body.append(hr);
             body.append(pDeparture);
             body.append(pArrival);
+            feather.replace();
         
             if (status == "0") {
+                let insuranceInput = document.createElement("input");
+                let insuranceLabel = document.createElement("label");
                 let insuranceButton = document.createElement("button");
                 let flightStatusButton = document.createElement("button");
                 let br = document.createElement("br");
-        
+
+                insuranceInput.type = "number";
+                insuranceInput.id = "amount-" + flightKey;
+                insuranceInput.min = "0";
+                insuranceInput.max = "1";
+                insuranceInput.step = "0.1";
+                insuranceInput.placeholder = "0-1";
+                insuranceLabel.innerHTML = "ether";
                 insuranceButton.classList = "btn btn-danger";
                 flightStatusButton.classList = "btn btn-warning";
         
                 insuranceButton.innerHTML = "Buy Insurance";
                 flightStatusButton.innerHTML = "Get Flight Status";
         
+                body.append(insuranceInput);
+                body.append(insuranceLabel);
+                body.append(br);
                 body.append(insuranceButton);
                 body.append(br);
                 body.append(flightStatusButton);
@@ -200,19 +188,9 @@ let statusColor = [
                 flightStatusButton.addEventListener('click', () => {
                     getFlightStatus(airline, flight, flightKey, timestamp);
                 });
-                insuranceButton.addEventListener('click', buyInsurance);
-                // Add Buy Insurance Button
-            } else if (status == "20") {
-                let pInsuranceMoney = document.createElement("p")
-                let claimButton = document.createElement("button");
-                claimButton.classList = "btn btn-success";
-                pInsuranceMoney.innerHTML = "INSURANCE MONEY";
-                claimButton.innerHTML = "Claim Insurance";
-                body.append(pInsuranceMoney);
-                body.append(claimButton);
-                claimButton.addEventListener('click', claimInsurance());
-                // If insurance not claimed
-                    // Add Claim Button
+                insuranceButton.addEventListener('click', () =>{
+                    buyInsurance(DOM.elid("amount-" + flightKey).value);
+                });
             }
         }
         
@@ -242,4 +220,3 @@ function displayAlert(type, heading, content) {
     alert.appendChild(h2);
     alert.appendChild(p);
 }
-

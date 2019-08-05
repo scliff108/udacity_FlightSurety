@@ -32,70 +32,100 @@
             </div>
         </div>
 
-        <div class="top-20">
-            <h2>Get Operational Status</h2>
-            <btn class="btn btn-primary" id="get-operational">Get Operational Status</btn>
-        </div>
 
-        <div class="top-20">
-            <h2>Toggle Operational Status</h2>
-            <btn class="btn btn-primary" id="toggle-operational">Toggle Operational Status</btn>
-        </div>
+        <section class="top-20 airline">
+            <h1>Airlines</h1>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card bg-primary">
+                        <div class="card-body">
+                            <h2 class="card-title">Operational Status</h2>
+                            <h3 class="card-subtitle mb-2" id="operational-status">trizz</h3>
+                            <hr />
+                            <button class="btn btn-success" id="get-operational">Get Operational Status <i data-feather="activity"></i></button>
+                            <button class="btn btn-warning" id="toggle-operational">Toggle Operational Status <i data-feather="toggle-left"></i></button>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="top-20 airline">
-            <h2>Register Airline</h2>
-            <label for="airline-address">Airline Address:</label>
-            <input type="text" id="airline-address" placeholder="Airline Address">
-            <br />
-            <btn class="btn btn-primary" id="register-airline">Register Airline</btn>
-        </div>
+                <div class="col-sm-6">
+                    <div class="card bg-primary">
+                        <div class="card-body">
+                            <h2 class="card-title">Register Airline</h2>
+                            <hr />
+                            <label for="airline-address">Airline Address:</label>
+                            <input type="text" id="airline-address" placeholder="Airline Address">
+                            <br />
+                            <button class="btn btn-success" id="register-airline">Register Airline <i data-feather="plus-square"></i></button>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="top-20 airline">
-            <h2>Fund Registered Airline</h2>
-            <label for="funding-amount" class="form">Funding Amount (eth):</label>
-            <input type="number" id="funding-amount" min="10">
-            <br />
-            <btn class="btn btn-primary" id="fund-airline">Fund Airline</btn>
-        </div>
+                <div class="col-sm-6">
+                    <div class="card bg-primary">
+                        <div class="card-body">
+                            <h2 class="card-title">Fund Registered Airline</h2>
+                            <hr />
+                            <label for="funding-amount" class="form">Funding Amount (eth):</label>
+                            <input type="number" id="funding-amount" min="10" placeholder="0-10">
+                            <br />
+                            <button class="btn btn-success" id="fund-airline">Fund Airline <i data-feather="dollar-sign"></i></button>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="top-20 airline">
-            <h2>Register Flight</h2>
-            <label for="flight-number">Flight Number:</label>
-            <input type="text" id="flight-number" placeholder="Flight Number">
-            <br />
-            <label for="departure-location">Flying From:</label>
-            <input type="text" id="departure-location" placeholder="Flying From">
-            <br />
-            <label for="arrival-location">Flying To:</label>
-            <input type="text" id="arrival-location" placeholder="Flying To">
-            <br />
-            <btn class="btn btn-primary" id="register-flight">Register Flight</btn>
-        </div>
-
-        <div class="top-20">
-            <h2>Flights</h2>
-            <btn class="btn btn-warning" id="refresh-flights">Refresh Flights</btn>
-            <div class="row" id="flights-container">
+                <div class="col-sm-12">
+                    <div class="card bg-primary">
+                        <div class="card-body">
+                            <h2 class="card-title">Register Flight</h2>
+                            <hr />
+                            <label for="flight-number">Flight Number:</label>
+                            <input type="text" id="flight-number" placeholder="Flight Number">
+                            <br />
+                            <label for="departure-location">Flying From:</label>
+                            <input type="text" id="departure-location" placeholder="Flying From">
+                            <br />
+                            <label for="arrival-location">Flying To:</label>
+                            <input type="text" id="arrival-location" placeholder="Flying To">
+                            <br />
+                            <button class="btn btn-success" id="register-flight">Register Flight <i data-feather="send"></i></button>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
 
-        
+        <section class="top-20 passenger">
+            <h1>Passenger</h1>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card bg-primary">
+                        <div class="card-body">
+                            <h2 class="card-title">Withdrawable Funds</h2>
+                            <hr />
+                            <p id="withdrawable-funds">Withdrawable Funds</p>
+                            <button class="btn btn-danger" id="withdraw-funds">Withdraw Funds <i data-feather="dollar-sign"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card bg-primary">
+                        <div class="card-body">
+                            <h2 class="card-title">Flights</h2>
+                            <button class="btn btn-warning" id="refresh-flights">Refresh Flights <i data-feather="refresh-cw"></i></button>
+                            <div class="row" id="flights-container">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </section>
 
-        <div class="top-20">
-            <h2>Show Purchased Insurance:</h2>
-            <btn class="btn btn-primary" id="purchased-insurance">Purchased Insurance</btn>
-        </div>
-
-        <div class="top-20">
-            <h2>Show Insurance Payouts</h2>
-            <btn class="btn btn-primary" id="insurance-payouts">Insurance Payouts</btn>
-        </div>
-
-        <div class="top-20">
-            <h2>Withdraw Funds:</h2>
-            <btn class="btn btn-primary" id="withdraw-funds">Withdraw Funds</btn>
-        </div>
     </main>
+
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>

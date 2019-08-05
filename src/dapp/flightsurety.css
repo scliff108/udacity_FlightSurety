@@ -8,8 +8,11 @@ body {
     margin-top: 80px;
     background-color: #000;
     opacity: 0.95;
-    color: #fff;
     padding: 40px;
+}
+.container h1 {
+    
+    color: #fff;
 }
 
 div.btn-group {
@@ -58,4 +61,7 @@ a:hover {
 }
 button {
     margin-bottom: 10px;
+}
+#operational-status:first-letter {
+    text-transform: capitalize;
 }

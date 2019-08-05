@@ -46,10 +46,10 @@ contract FlightSuretyData {
     }
 
     // Flight Insurance Claims
-    mapping(bytes32 => InsuranceClaim[]) private flightInsuranceClaims;
+    mapping(bytes32 => InsuranceClaim[]) public flightInsuranceClaims;
 
     // Passenger Insurance Claims
-    mapping(address => InsuranceClaim[]) private passengerInsuranceClaims;
+    mapping(address => uint256) public withdrawableFunds;
 
     /**
     * @dev Constructor
