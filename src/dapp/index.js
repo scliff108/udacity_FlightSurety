@@ -2,13 +2,14 @@
 import DOM from './dom';
 import Contract from './contract';
 import './flightsurety.css';
+import { ContractModuleFactory } from 'web3-eth-contract';
 let statuses = [
     ["Unknown", "light", "eye"],
     ["On Time", "success", "thumbs-up",], 
     ["Late - Airline", "danger", "dollar-sign",], 
     ["Late - Weather", "secondary", "cloud-lightning",], 
     ["Late - Technical", "warning", "alert-triangle",], 
-    ["Late - Other", "dark", "alert-circle"] 
+    ["Late - Other", "info", "alert-circle"] 
 ];
 
 (async() => {
@@ -38,14 +39,14 @@ let statuses = [
         }
         getOperationalStatus();
 
-        function getFlights() {
-            contract.getRegisteredFlights();
+        async function getFlights() {
+            let flights = await contract.getRegisteredFlights();
             let flightsContainer = DOM.elid('flights-container');
             while (flightsContainer.hasChildNodes()) {
                 flightsContainer.removeChild(flightsContainer.firstChild);
             }
-            if (contract.flights.length > 0) {
-                contract.flights.forEach(function(flight) {
+            if (flights.length > 0) {
+                flights.forEach(function(flight) {
                     addFlightCard(
                         flight.sFlightNumber,
                         flight.sFlightKey,
@@ -59,6 +60,19 @@ let statuses = [
             }
         }
         getFlights();
+
+        function calculateBalance() {
+            contract.calculateBalance((error, result) => {
+                let withdrawableFunds = DOM.elid('withdrawable-funds');
+                if (!error) {
+                    let balance = contract.web3.utils.fromWei(result, 'ether');
+                    if (balance) {
+                        withdrawableFunds.innerHTML = "You have " + balance + " ether to withdraw.";
+                    }
+                }
+            });
+        }
+        calculateBalance();
 
         DOM.elid('refresh-flights').addEventListener('click', () => {
             getFlights();
@@ -82,6 +96,20 @@ let statuses = [
             getOperationalStatus();
         });
 
+        DOM.elid('refresh-funds').addEventListener('click', () => {
+            calculateBalance();
+        });
+
+        DOM.elid('withdraw-funds').addEventListener('click', () => {
+            contract.withdraw((error, result) => {
+                if (error) {
+                    console.log(error)
+                } else {
+                    console.log(result);
+                }
+            });
+        });
+
         DOM.elid('register-airline').addEventListener('click', () => {
             let airline = DOM.elid('airline-address').value;
             if (airline) {
@@ -94,17 +122,16 @@ let statuses = [
             contract.fundAirline(amount);
         });
 
-        DOM.elid('register-flight').addEventListener('click', () => {
+        DOM.elid('register-flight').addEventListener('click', async() => {
             let flightNumber = DOM.elid('flight-number').value;
             let departureLocation = DOM.elid('departure-location').value;
             let arrivalLocation = DOM.elid('arrival-location').value;
-            contract.registerFlight(flightNumber, departureLocation, arrivalLocation); 
+            contract.registerFlight(flightNumber, departureLocation, arrivalLocation);
         });
         
-        // User-submitted transaction
         function getFlightStatus(airline, flight, flightKey, flightTimeStamp) {
             // Write transaction
-            contract.fetchFlightStatus(airline, flight, flightTimeStamp, (error, result) => {
+            contract.fetchFlightStatus(airline, flight, flightTimeStamp, flightKey, (error, result) => {
                 if (error) {
                     displayAlert("danger", "Get Flight Status", error);
                 } else {
@@ -116,10 +143,6 @@ let statuses = [
         function buyInsurance(flightKey, amount) {
             console.log("Buy Insurance: " + amount);
             contract.buyInsurance(flightKey, amount);
-        }
-
-        function claimInsurance() {
-            console.log("Claim Insurance");
         }
 
         function addFlightCard(flight, flightKey, airline, departure, arrival, status, timestamp) {

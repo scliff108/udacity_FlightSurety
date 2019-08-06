@@ -13,7 +13,7 @@ module.exports = {
       },
       network_id: '*',
       gas: 999999999,
-      gasPrice: 1
+      accounts: 10
     }
   },
   compilers: {

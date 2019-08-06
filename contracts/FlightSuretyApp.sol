@@ -138,12 +138,11 @@ contract FlightSuretyApp {
         msg.sender.transfer(refund);
     }
 
-    
     modifier requireFlightIsRegistered(bytes32 flightKey) {
         require(flightSuretyData.isFlightRegistered(flightKey), "Flight is not registered.");
         _;
     }
-    
+
     modifier requireFlightIsNotLanded(bytes32 flightKey) {
         require(!flightSuretyData.isFlightLanded(flightKey), "Flight has already landed");
         _;
@@ -278,7 +277,17 @@ contract FlightSuretyApp {
 
 
     // Generate a request for oracles to fetch flight information
-    function fetchFlightStatus(address airline, string calldata flight, uint256 timestamp) external {
+    function fetchFlightStatus
+    (
+        address airline,
+        string calldata flight,
+        uint256 timestamp,
+        bytes32 flightKey
+    )
+        external
+        requireFlightIsRegistered(flightKey)
+        requireFlightIsNotLanded(flightKey)
+    {
         uint8 index = getRandomIndex(msg.sender);
 
         // Generate a unique key for storing the request
@@ -304,6 +313,10 @@ contract FlightSuretyApp {
         flightSuretyData.buyInsurance(flightKey, msg.sender, msg.value, INSURANCE_PAYOUT);
     }
 
+    function pay() external requireIsOperational {
+        flightSuretyData.pay(msg.sender);
+    }
+
 
 
     /********************************************************************************************/
@@ -317,7 +330,7 @@ contract FlightSuretyApp {
     uint256 public constant REGISTRATION_FEE = 1 ether;
 
     // Number of oracles that must respond for valid status
-    uint256 private constant MIN_RESPONSES = 1;
+    uint256 private constant MIN_RESPONSES = 3;
 
     struct Oracle {
         bool isRegistered;
@@ -468,7 +481,7 @@ contract FlightSuretyData {
     function processFlightStatus(address airline, string calldata flight, uint256 timestamp, uint8 statusCode) external;
     function buyInsurance(bytes32 flightKey, address passenger, uint256 amount, uint256 payout) external payable;
     function creditInsurees(bytes32 flightKey) internal;
-    function pay(address payoutAddress) external;
+    function pay(address payable payoutAddress) external;
     function getFlightKey(address airline, string memory flight, uint256 timestamp) internal pure returns(bytes32);
     function fund() public payable;
 }
