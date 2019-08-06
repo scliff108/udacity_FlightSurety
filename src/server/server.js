@@ -34,7 +34,7 @@ async function registerOracles() {
 
 async function submitOracleResponse(airline, flight, timestamp) {
   for (var i = 0; i < oracles.length; i++) {
-    var statusCode = 20 //(Math.floor(Math.random() * Math.floor(4)) + 1) * 10 + 10;
+    var statusCode = (Math.floor(Math.random() * Math.floor(4)) + 1) * 10 + 10;
     var indexes = await flightSuretyApp.methods.getMyIndexes().call({from: oracles[i]});
     for (var j = 0; j < indexes.length; j++) {
       try {
