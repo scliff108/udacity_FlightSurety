@@ -35,7 +35,7 @@
     "start-server-webpack-plugin": "2.2.5",
     "style-loader": "^0.23.1",
     "superstatic": "6.0.3",
-    "truffle": "^5.0.30",
+    "truffle": "^5.7.9",
     "truffle-hdwallet-provider": "1.0.2",
     "web3": "^1.2.0",
     "webpack": "^4.35.2",
@@ -44,6 +44,6 @@
     "webpack-node-externals": "1.7.2"
   },
   "dependencies": {
-    "mocha": "^6.2.0"
+    "mocha": "^6.2.3"
   }
 }
